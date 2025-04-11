@@ -1,0 +1,9 @@
+[package]
+name = "env_init"
+version = "0.1.0"
+edition = "2024"
+description = "Small crate to help initializing environment structs"
+repository = "https://github.com/LunarParfait/env_init"
+
+[dependencies]
+thiserror = "2.0.12"
