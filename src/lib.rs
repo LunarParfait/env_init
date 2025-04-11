@@ -1,4 +1,3 @@
-use std::error::Error;
 use std::ops::Deref;
 
 use std::str::FromStr;
@@ -7,17 +6,17 @@ use std::sync::{LazyLock, OnceLock};
 #[cfg(test)]
 mod tests;
 
-pub struct EnvGetter<G: Error, I: Fn(&str) -> Result<String, G>> {
+pub struct EnvGetter<G, I: Fn(&str) -> Result<String, G>> {
     getter: I,
 }
 
 #[derive(thiserror::Error, Debug)]
-pub enum EnvError<G: Error, P> {
+pub enum EnvError<G, P> {
     GetterError(G),
     ParseError(P),
 }
 
-impl<G: Error, I: Fn(&str) -> Result<String, G>> EnvGetter<G, I> {
+impl<G, I: Fn(&str) -> Result<String, G>> EnvGetter<G, I> {
     pub fn init_env(getter: I) -> Self {
         Self { getter }
     }
