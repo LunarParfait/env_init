@@ -30,7 +30,7 @@ pub struct MyEnv {
 impl Env for MyEnv {
     fn new() -> Self {
         // Defining a getter that calls dotenvy::var
-        let g = EnvGetter::init_env(|x| dotenvy::var(x));
+        let g = EnvGetter::new(|x| dotenvy::var(x));
 
         Self {
             some_int: g.owned_var("SOME_INT"),

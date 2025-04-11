@@ -17,7 +17,7 @@ pub enum EnvError<G, P> {
 }
 
 impl<G, I: Fn(&str) -> Result<String, G>> EnvGetter<G, I> {
-    pub fn init_env(getter: I) -> Self {
+    pub fn new(getter: I) -> Self {
         Self { getter }
     }
 

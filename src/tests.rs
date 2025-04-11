@@ -12,42 +12,42 @@ fn mock_getter(key: &str) -> Result<String, std::env::VarError> {
 
 #[test]
 fn test_owned_var_try_ok() {
-    let getter = EnvGetter::init_env(mock_getter);
+    let getter = EnvGetter::new(mock_getter);
     let result: Result<i32, _> = getter.owned_var_try("INT_OK");
     assert_eq!(result.unwrap(), 42);
 }
 
 #[test]
 fn test_owned_var_try_missing() {
-    let getter = EnvGetter::init_env(mock_getter);
+    let getter = EnvGetter::new(mock_getter);
     let result: Result<i32, _> = getter.owned_var_try("MISSING");
     assert!(matches!(result, Err(EnvError::GetterError(_))));
 }
 
 #[test]
 fn test_owned_var_try_parse_fail() {
-    let getter = EnvGetter::init_env(mock_getter);
+    let getter = EnvGetter::new(mock_getter);
     let result: Result<i32, _> = getter.owned_var_try("INT_BAD");
     assert!(matches!(result, Err(EnvError::ParseError(_))));
 }
 
 #[test]
 fn test_owned_var_or_default_used() {
-    let getter = EnvGetter::init_env(mock_getter);
+    let getter = EnvGetter::new(mock_getter);
     let val: i32 = getter.owned_var_or("MISSING", 123);
     assert_eq!(val, 123);
 }
 
 #[test]
 fn test_owned_var_or_default_skipped() {
-    let getter = EnvGetter::init_env(mock_getter);
+    let getter = EnvGetter::new(mock_getter);
     let val: i32 = getter.owned_var_or("INT_OK", 123);
     assert_eq!(val, 42);
 }
 
 #[test]
 fn test_owned_var_or_else_called() {
-    let getter = EnvGetter::init_env(mock_getter);
+    let getter = EnvGetter::new(mock_getter);
     let val: i32 = getter.owned_var_or_else("MISSING", || 999);
     assert_eq!(val, 999);
 }
@@ -55,20 +55,20 @@ fn test_owned_var_or_else_called() {
 #[test]
 #[should_panic(expected = "Couldn't find or parse env variable INT_BAD")]
 fn test_owned_var_panics_on_parse_error() {
-    let getter = EnvGetter::init_env(mock_getter);
+    let getter = EnvGetter::new(mock_getter);
     let _: i32 = getter.owned_var("INT_BAD");
 }
 
 #[test]
 fn test_var_try_leak() {
-    let getter = EnvGetter::init_env(mock_getter);
+    let getter = EnvGetter::new(mock_getter);
     let val: &'static i32 = getter.var_try("INT_OK").unwrap();
     assert_eq!(*val, 42);
 }
 
 #[test]
 fn test_var_or_else_leak() {
-    let getter = EnvGetter::init_env(mock_getter);
+    let getter = EnvGetter::new(mock_getter);
     let val: &'static i32 = getter.var_or_else("MISSING", || 999);
     assert_eq!(*val, 999);
 }
@@ -84,7 +84,7 @@ struct DummyEnv {
 
 impl Env for DummyEnv {
     fn new() -> Self {
-        let g = EnvGetter::init_env(mock_getter);
+        let g = EnvGetter::new(mock_getter);
 
         Self {
             some_int: g.owned_var("INT_OK"),
