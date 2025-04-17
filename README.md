@@ -15,7 +15,7 @@ SOME_OTHER_STR=World
 ```
 
 main.rs
-```rs
+```rust,ignore
 use env_init::{Env, EnvGetter, EnvOnce};
 
 #[derive(Debug)]
