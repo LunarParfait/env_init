@@ -8,7 +8,7 @@ strings into their corresponding types in the struct.
 ## Example Usage with dotenvy
 
 .env
-```
+```text
 SOME_INT=42
 SOME_STR=Hello
 SOME_OTHER_STR=World

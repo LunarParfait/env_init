@@ -1,22 +1,49 @@
-use std::ops::Deref;
+#![doc = include_str!("../README.md")]
 
+use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::{LazyLock, OnceLock};
 
 #[cfg(test)]
 mod tests;
 
+/// Struct that holds a closure to get environment variables.
+///
+/// # Examples
+/// ```
+/// use env_init::{EnvGetter, EnvError};
+///
+/// let closure = |x: &str| {
+///     if x == "KEY" {
+///         Ok("VALUE".to_string())
+///     } else {
+///         Err(())
+///     }
+/// };
+///
+/// let g = EnvGetter::new(closure);
+/// let key = g.owned_var_try::<String>("KEY");
+/// let not_found = g.owned_var_try::<String>("NOT_FOUND");
+///
+/// assert_eq!(key, Ok("VALUE".to_string()));
+/// assert_eq!(not_found, Err(EnvError::GetterError(())));
+/// ```
 pub struct EnvGetter<G, I: Fn(&str) -> Result<String, G>> {
     getter: I,
 }
 
-#[derive(thiserror::Error, Debug)]
+// TODO: remove thiserror dependency
+
+/// Custom error type, which can be a GetterError (error returned by
+/// closure) or ParseError (error returned by [`FromStr`]).
+#[derive(thiserror::Error, Debug, Clone, PartialEq, PartialOrd)]
 pub enum EnvError<G, P> {
     GetterError(G),
     ParseError(P),
 }
 
 impl<G, I: Fn(&str) -> Result<String, G>> EnvGetter<G, I> {
+    /// Initializes a new [`EnvGetter`] from a closure
     pub fn new(getter: I) -> Self {
         Self { getter }
     }
@@ -24,7 +51,7 @@ impl<G, I: Fn(&str) -> Result<String, G>> EnvGetter<G, I> {
     /// Useful when you want to handle the Result yourself, and do not want the
     /// result to be leaked.
     ///
-    /// The leaking version of this is `var_try`.
+    /// The leaking version of this is [`Self::var_try`].
     ///
     /// # Errors
     /// When the environment variable is not found or when the parsing fails for R.
@@ -40,7 +67,7 @@ impl<G, I: Fn(&str) -> Result<String, G>> EnvGetter<G, I> {
     /// default alternative, but you do not want the parsed result to be leaked/static ref.
     /// E.g.: Any Copy type. Not worth leaking.
     ///
-    /// The leaking version of this is `var`.
+    /// The leaking version of this is [`Self::var`].
     ///
     /// # Panics
     /// When the environment variable is not found or when the parsing fails for T.
@@ -54,16 +81,16 @@ impl<G, I: Fn(&str) -> Result<String, G>> EnvGetter<G, I> {
     /// but you do not want the parsed result to be leaked or static.
     /// E.g.: Any Copy type. Not worth leaking.
     ///
-    /// The leaking version of this function is `var_or`.
+    /// The leaking version of this function is [`Self::var_or`].
     pub fn owned_var_or<T: FromStr>(&self, name: &str, default: T) -> T {
         self.owned_var_try(name).unwrap_or(default)
     }
 
     /// Useful when you want to provide a default value for the environment variable,
     /// but you do not want the parsed result to be leaked or static. Use this over
-    /// `owned_var_or` when you need to provide a closure for the default value.
+    /// [`Self::owned_var_or`] when you need to provide a closure for the default value.
     ///
-    /// The leaking version of this function is `var_or_else`.
+    /// The leaking version of this function is [`Self::var_or_else`].
     pub fn owned_var_or_else<T: FromStr, V: FnOnce() -> T>(
         &self,
         name: &str,
@@ -122,7 +149,7 @@ impl<G, I: Fn(&str) -> Result<String, G>> EnvGetter<G, I> {
 
     /// Useful when you want to provide a default value for the environment variable,
     /// but you don't have a static reference to the value.
-    /// E.g.: An owned `PathBuf` -> A `&'static Path`.
+    /// E.g.: An owned [`PathBuf`](std::path::PathBuf) -> A `&'static Path`.
     ///
     /// # Leaks
     /// This function will leak the parsed or the default value.
@@ -135,10 +162,12 @@ impl<G, I: Fn(&str) -> Result<String, G>> EnvGetter<G, I> {
     }
 }
 
+/// This trait is used to create a new environment struct.
 pub trait Env {
     fn new() -> Self;
 }
 
+/// Wrapper over a [`LazyLock<T>`] where T implements [`Env`]
 pub struct EnvLazy<T: Env>(LazyLock<T>);
 
 impl<T: Env> EnvLazy<T> {
@@ -162,6 +191,7 @@ impl<T: Env> AsRef<T> for EnvLazy<T> {
     }
 }
 
+/// Wrapper over a [`OnceLock<T>`] where T implements [`Env`]
 pub struct EnvOnce<T: Env>(OnceLock<T>);
 
 impl<T: Env> EnvOnce<T> {
